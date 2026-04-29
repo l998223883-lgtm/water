@@ -3,7 +3,7 @@ import { AlertList } from "@/components/stations/AlertList";
 import { Badge } from "@/components/ui/badge";
 import { Bell, CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react";
 
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 async function getAllAlerts() {
   const station = await prisma.station.findFirst({ orderBy: { createdAt: "asc" } });

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { LabForm } from "@/components/lab/LabForm";
 
-export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 async function getData() {
   const station = await prisma.station.findFirst({ orderBy: { createdAt: "asc" } });

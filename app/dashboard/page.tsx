@@ -7,7 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { AutoRefresh } from "@/components/layout/AutoRefresh";
 
-export const revalidate = 15;
+export const dynamic = "force-dynamic";
 
 async function getStationData() {
   return prisma.station.findMany({

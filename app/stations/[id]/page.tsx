@@ -12,7 +12,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 const SENSOR_COLORS: Record<string, string> = {
   PH: "#8b5cf6",

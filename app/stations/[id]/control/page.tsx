@@ -7,7 +7,8 @@ import { getControlRecommendation } from "@/lib/placeholders";
 import { ArrowLeft, Shield, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
-export const revalidate = 0; // 控制页不缓存
+export const dynamic = "force-dynamic";
+ // 控制页不缓存
 
 async function getStationForControl(id: string) {
   return prisma.station.findUnique({
