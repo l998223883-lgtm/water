@@ -10,18 +10,22 @@ import { AutoRefresh } from "@/components/layout/AutoRefresh";
 export const dynamic = "force-dynamic";
 
 async function getStationData() {
-  return prisma.station.findMany({
-    include: {
-      sensors: { where: { isActive: true }, orderBy: { type: "asc" } },
-      _count: {
-        select: {
-          alerts: { where: { status: "OPEN" } },
-          workOrders: { where: { status: { in: ["PENDING", "IN_PROGRESS"] } } },
+  try {
+    return await prisma.station.findMany({
+      include: {
+        sensors: { where: { isActive: true }, orderBy: { type: "asc" } },
+        _count: {
+          select: {
+            alerts: { where: { status: "OPEN" } },
+            workOrders: { where: { status: { in: ["PENDING", "IN_PROGRESS"] } } },
+          },
         },
       },
-    },
-    orderBy: { createdAt: "asc" },
-  });
+      orderBy: { createdAt: "asc" },
+    });
+  } catch {
+    return null;
+  }
 }
 
 const statusConfig = {
@@ -33,6 +37,19 @@ const statusConfig = {
 
 export default async function DashboardPage() {
   const stations = await getStationData();
+
+  if (!stations) {
+    return (
+      <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
+        <WifiOff className="w-12 h-12 text-slate-300" />
+        <h2 className="text-lg font-semibold text-slate-600">数据库未连接</h2>
+        <p className="text-sm text-slate-400 max-w-sm">
+          请在 Vercel 项目设置中配置 <code className="bg-slate-100 px-1 rounded">DATABASE_URL</code> 环境变量后重新部署。
+        </p>
+      </div>
+    );
+  }
+
   const totalOpen = stations.reduce((s, st) => s + st._count.alerts, 0);
   const onlineCount = stations.filter((s) => s.status === "ONLINE").length;
 
