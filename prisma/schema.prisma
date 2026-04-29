@@ -1,0 +1,237 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma 7: url 配置已移至项目根目录的 prisma.config.ts
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum StationStatus {
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+  ALARM
+}
+
+enum SensorType {
+  PH
+  DO
+  ORP
+  FLOW_IN
+  LEVEL_IN
+  LEVEL_OUT
+  TURBIDITY
+  CONDUCTIVITY
+  TEMP
+}
+
+enum AlertType {
+  SENSOR_FAULT
+  THRESHOLD_HIGH
+  THRESHOLD_LOW
+  STORM_EVENT
+  SYSTEM_ANOMALY
+  CONTROL_OVERRIDE
+}
+
+enum Severity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum WorkOrderStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ControlDevice {
+  BLOWER
+  DOSING_PUMP
+}
+
+enum ControlSource {
+  ALGORITHM
+  MANUAL
+  SAFETY
+}
+
+// ─── Core Models ──────────────────────────────────────────────────────────────
+
+model Station {
+  id            String        @id @default(cuid())
+  name          String
+  location      String
+  capacity      Int           // 设计处理量 吨/天
+  processType   String        // "MBBR" | "AO" | "SBR"
+  status        StationStatus @default(ONLINE)
+  gatewayId     String?       // 边缘网关唯一ID，用于MQTT鉴权
+  lastHeartbeat DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  sensors     Sensor[]
+  alerts      Alert[]
+  workOrders  WorkOrder[]
+  labSamples  LabSample[]
+  reports     Report[]
+  controlLogs ControlLog[]
+  softModels  SoftModel[]
+
+  @@map("stations")
+}
+
+model Sensor {
+  id          String     @id @default(cuid())
+  stationId   String
+  station     Station    @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  type        SensorType
+  name        String     // 显示名称，如 "曝气池DO"
+  unit        String     // "mg/L" | "pH" | "mV" | "m³/h" | "m" | "NTU"
+  location    String     // "进水井" | "曝气池" | "清水池"
+  minNormal   Float      // 正常范围下限（告警阈值）
+  maxNormal   Float      // 正常范围上限
+  minPhysical Float      // 物理量程下限（超出=硬件故障）
+  maxPhysical Float      // 物理量程上限
+  isActive    Boolean    @default(true)
+  healthScore Float      @default(1.0) // 0.0-1.0，每分钟更新
+  lastValue   Float?
+  lastReadAt  DateTime?
+  createdAt   DateTime   @default(now())
+
+  readings SensorReading[]
+  alerts   Alert[]
+
+  @@unique([stationId, type])
+  @@map("sensors")
+}
+
+// TimescaleDB hypertable
+// 迁移后执行: SELECT create_hypertable('sensor_readings', 'timestamp');
+model SensorReading {
+  id        BigInt   @id @default(autoincrement())
+  sensorId  String
+  sensor    Sensor   @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+  value     Float
+  quality   Int      @default(100) // 0-100，清洗后置信度
+  timestamp DateTime @default(now())
+
+  @@index([sensorId, timestamp(sort: Desc)])
+  @@map("sensor_readings")
+}
+
+model Alert {
+  id             String      @id @default(cuid())
+  stationId      String
+  station        Station     @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  sensorId       String?
+  sensor         Sensor?     @relation(fields: [sensorId], references: [id])
+  type           AlertType
+  severity       Severity    @default(WARNING)
+  message        String
+  // PLACEHOLDER: MVP阶段规则模板生成，P1接 Haiku API
+  diagnosis      String?
+  status         AlertStatus @default(OPEN)
+  triggeredAt    DateTime    @default(now())
+  acknowledgedAt DateTime?
+  resolvedAt     DateTime?
+
+  workOrders WorkOrder[]
+
+  @@index([stationId, status])
+  @@index([stationId, triggeredAt(sort: Desc)])
+  @@map("alerts")
+}
+
+model WorkOrder {
+  id           String          @id @default(cuid())
+  stationId    String
+  station      Station         @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  alertId      String?
+  alert        Alert?          @relation(fields: [alertId], references: [id])
+  title        String
+  description  String
+  // PLACEHOLDER: P1接 Haiku 生成操作建议
+  aiSuggestion String?
+  status       WorkOrderStatus @default(PENDING)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@map("work_orders")
+}
+
+model LabSample {
+  id        String   @id @default(cuid())
+  stationId String
+  station   Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  sampledAt DateTime
+  codOut    Float?   // 出水COD mg/L，GB18918一级A目标<50
+  nh3nOut   Float?   // 出水氨氮 mg/L，目标<5
+  tpOut     Float?   // 出水总磷 mg/L，目标<0.5
+  ssOut     Float?   // 出水SS mg/L，目标<10
+  codIn     Float?   // 进水COD（软测量训练用）
+  nh3nIn    Float?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@map("lab_samples")
+}
+
+model ControlLog {
+  id          String        @id @default(cuid())
+  stationId   String
+  station     Station       @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  device      ControlDevice
+  parameter   String        // "frequency_hz" | "dose_rate_pct"
+  oldValue    Float
+  newValue    Float
+  clampedFrom Float?        // 被保底防线截断时记录原始请求值
+  source      ControlSource
+  issuedAt    DateTime      @default(now())
+  confirmedAt DateTime?     // 网关回执确认，null=未收到
+
+  @@index([stationId, issuedAt(sort: Desc)])
+  @@map("control_logs")
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  stationId String
+  station   Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  month     String   // "2024-03"
+  // PLACEHOLDER: P1接 Haiku 生成执行摘要
+  summary   String?
+  metrics   Json     // 聚合指标快照
+  createdAt DateTime @default(now())
+
+  @@unique([stationId, month])
+  @@map("reports")
+}
+
+model SoftModel {
+  id        String   @id @default(cuid())
+  stationId String
+  station   Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  target    String   // "cod_out" | "nh3n_out"
+  version   Int      @default(1)
+  mae       Float?   // 测试集MAE
+  bias      Float    @default(0) // bias correction，每次化验后更新
+  // PLACEHOLDER: 实际为ONNX文件路径，MVP阶段用常量函数
+  modelPath String?
+  trainedAt DateTime?
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("soft_models")
+}
