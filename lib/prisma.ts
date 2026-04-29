@@ -5,18 +5,13 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-function getPrisma(): PrismaClient {
-  if (globalForPrisma.prisma) return globalForPrisma.prisma;
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) throw new Error("DATABASE_URL is not set");
+function createPrismaClient() {
+  // Fallback keeps the import from crashing at build time (pg is lazy, no actual connection until query runs)
+  const connectionString = process.env.DATABASE_URL ?? "postgresql://build:build@localhost:5432/build";
   const adapter = new PrismaPg({ connectionString });
-  const client = new PrismaClient({ adapter });
-  if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = client;
-  return client;
+  return new PrismaClient({ adapter });
 }
 
-export const prisma = new Proxy({} as PrismaClient, {
-  get(_target, prop) {
-    return (getPrisma() as never)[prop];
-  },
-});
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
