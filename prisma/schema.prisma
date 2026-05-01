@@ -26,6 +26,10 @@ enum SensorType {
   TURBIDITY
   CONDUCTIVITY
   TEMP
+  DOSING_PHOSPHORUS  // 除磷剂投加量 kg/次
+  DOSING_CARBON      // 碳源投加量 kg/次
+  DOSING_DISINFECTANT // 消毒剂投加量 kg/次
+  DOSING_PAM         // PAM絮凝剂投加量 kg/次
 }
 
 enum AlertType {
@@ -73,8 +77,9 @@ model Station {
   id            String        @id @default(cuid())
   name          String
   location      String
-  capacity      Int           // 设计处理量 吨/天
-  processType   String        // "MBBR" | "AO" | "SBR"
+  capacity         Int           // 设计处理量 吨/天
+  dailyFlowActual  Float?        // 2025年实测日均处理量 吨/天（来自运营数据）
+  processType      String        // "MBBR" | "AAO" | "AO" | "SBR"
   status        StationStatus @default(ONLINE)
   gatewayId     String?       // 边缘网关唯一ID，用于MQTT鉴权
   lastHeartbeat DateTime?

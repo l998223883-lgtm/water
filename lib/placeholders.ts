@@ -159,17 +159,35 @@ export function generateAlertDiagnosis(params: {
       source: "rule",
     },
     THRESHOLD_LOW: {
-      diagnosis: `${sensorType || "指标"}当前值 ${value?.toFixed(2) ?? "—"}，低于下限 ${threshold?.toFixed(2) ?? "—"}。${
-        sensorType === "DO" ? "溶解氧不足可能导致好氧微生物活性下降，出水COD升高风险。" : ""
+      diagnosis: `${sensorType || "指标"}当前值 ${value?.toFixed(4) ?? "—"}，低于下限 ${threshold?.toFixed(4) ?? "—"}。${
+        sensorType === "DO" ? "溶解氧不足可能导致好氧微生物活性下降，出水COD升高风险。" :
+        sensorType === "DOSING_PHOSPHORUS" ? "除磷剂投加量不足，出水TP超标风险升高（一级A限值0.5 mg/L）。" :
+        sensorType === "DOSING_CARBON" ? "碳源投加量不足，反硝化效率下降，出水TN超标风险升高。" :
+        sensorType === "DOSING_DISINFECTANT" ? "消毒剂投加量不足，出水粪大肠菌群可能超标。" :
+        sensorType === "DOSING_PAM" ? "PAM投加量不足，污泥脱水效果下降，污泥含水率升高。" : ""
       }`,
       suggestion: sensorType === "DO"
         ? "建议：检查鼓风机运行状态，确认曝气管是否堵塞，临时提升曝气频率至45Hz"
+        : sensorType === "DOSING_PHOSPHORUS"
+        ? "建议：检查除磷剂储罐液位及加药泵运行状态，确认管路无堵塞，必要时提升投加量20%"
+        : sensorType === "DOSING_CARBON"
+        ? "建议：检查碳源储罐液位及计量泵，同步检查进水C/N比，评估是否需要补充外碳源"
+        : sensorType === "DOSING_DISINFECTANT"
+        ? "建议：检查消毒剂储罐及加药泵，同步取样检测出水余氯浓度"
+        : sensorType === "DOSING_PAM"
+        ? "建议：检查PAM配制浓度及加药泵流量，确认污泥脱水机进料状态"
         : "建议：现场检查对应设备运行状态",
       source: "rule",
     },
     THRESHOLD_HIGH: {
-      diagnosis: `${sensorType || "指标"}当前值 ${value?.toFixed(2) ?? "—"}，超过上限 ${threshold?.toFixed(2) ?? "—"}。`,
-      suggestion: "建议：检查进水水质是否异常，必要时降低进水量",
+      diagnosis: `${sensorType || "指标"}当前值 ${value?.toFixed(4) ?? "—"}，超过上限 ${threshold?.toFixed(4) ?? "—"}。${
+        sensorType === "DOSING_PHOSPHORUS" ? "除磷剂过量投加，运行成本升高，可能引起化学污泥量增加。" :
+        sensorType === "DOSING_CARBON" ? "碳源过量投加，出水COD可能升高，运行成本增加。" :
+        sensorType === "DOSING_DISINFECTANT" ? "消毒剂过量，出水余氯可能超标，检查投加控制阀。" : ""
+      }`,
+      suggestion: sensorType?.startsWith("DOSING_")
+        ? "建议：检查加药泵频率设定及计量校准，必要时降低投加比例10-20%"
+        : "建议：检查进水水质是否异常，必要时降低进水量",
       source: "rule",
     },
     STORM_EVENT: {
@@ -247,6 +265,26 @@ export function generateMockReading(
     TURBIDITY: () => parseFloat((Math.random() * 3 + 1).toFixed(1)),
     TEMP: () => parseFloat((18 + (Math.random() - 0.5) * 4).toFixed(1)),
     CONDUCTIVITY: () => parseFloat((450 + (Math.random() - 0.5) * 50).toFixed(0)),
+    // 药耗传感器：基准值取2025年实测均值对应的每10s投加量，±8%随机扰动
+    // 隆盛：除磷剂24.07 kg/d，碳源83.77 kg/d，消毒剂0.26 kg/d，PAM1.48 kg/d
+    // 团结：除磷剂1.09 kg/d，碳源7.20 kg/d，消毒剂0.05 kg/d
+    // seed 中使用 generateMockReading 生成历史，返回近似均值供展示用
+    DOSING_PHOSPHORUS: () => {
+      const base = lastValue ?? 0.00279; // 隆盛均值；团结为0.000126
+      return parseFloat((base * (1 + (Math.random() - 0.5) * 0.16)).toFixed(7));
+    },
+    DOSING_CARBON: () => {
+      const base = lastValue ?? 0.00970; // 隆盛均值；团结为0.000833
+      return parseFloat((base * (1 + (Math.random() - 0.5) * 0.16)).toFixed(7));
+    },
+    DOSING_DISINFECTANT: () => {
+      const base = lastValue ?? 0.0000301; // 隆盛均值；团结为0.00000579
+      return parseFloat((base * (1 + (Math.random() - 0.5) * 0.16)).toFixed(9));
+    },
+    DOSING_PAM: () => {
+      const base = lastValue ?? 0.000171; // 隆盛均值（团结无PAM）
+      return parseFloat((base * (1 + (Math.random() - 0.5) * 0.16)).toFixed(8));
+    },
   };
 
   const generator = patterns[sensorType];

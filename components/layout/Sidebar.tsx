@@ -26,23 +26,24 @@ function NavLinks({ pathname, onClose }: { pathname: string; onClose?: () => voi
     <nav className="flex-1 space-y-0.5 px-3 py-4">
       {navItems.map((item) => {
         const Icon = item.icon;
-        const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+        const isActive = item.href === "/control"
+          ? pathname === "/control" || pathname.endsWith("/control")
+          : item.href === "/stations"
+          ? (pathname === "/stations" || pathname.startsWith("/stations/")) && !pathname.endsWith("/control")
+          : pathname === item.href || pathname.startsWith(item.href + "/");
         const hi = (item as { highlight?: boolean }).highlight;
-        return (
-          <Link
-            key={item.href}
-            href={item.comingSoon ? "#" : item.href}
-            onClick={onClose}
-            className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
-              isActive
-                ? "bg-[#E8472A] text-white shadow-sm"
-                : hi
-                ? "text-[#E8472A] hover:bg-orange-50"
-                : "text-slate-500 hover:bg-slate-100 hover:text-slate-800",
-              item.comingSoon && "cursor-not-allowed opacity-40"
-            )}
-          >
+        const href = item.comingSoon ? "#" : item.href;
+        const classes = cn(
+          "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
+          isActive
+            ? "bg-[#E8472A] text-white shadow-sm"
+            : hi
+            ? "text-[#E8472A] hover:bg-orange-50"
+            : "text-slate-500 hover:bg-slate-100 hover:text-slate-800",
+          item.comingSoon && "cursor-not-allowed opacity-40"
+        );
+        const children = (
+          <>
             <Icon className="h-4 w-4 flex-shrink-0" />
             <span>{item.label}</span>
             {item.comingSoon && (
@@ -50,6 +51,19 @@ function NavLinks({ pathname, onClose }: { pathname: string; onClose?: () => voi
                 即将上线
               </span>
             )}
+          </>
+        );
+        // /control uses server redirect to dynamic route — bypass client router
+        if (item.href === "/control") {
+          return (
+            <a key={item.href} href={href} onClick={onClose} className={classes}>
+              {children}
+            </a>
+          );
+        }
+        return (
+          <Link key={item.href} href={href} onClick={onClose} className={classes}>
+            {children}
           </Link>
         );
       })}

@@ -333,10 +333,252 @@ async function main() {
   });
   console.log(`✅ 创建演示月报 1 条`);
 
+  // ── 隆盛镇污水处理厂 ─────────────────────────────────────────────────────────
+  // 2025年实测：日均处理量 536.47 t/d，水质达标率 100%
+  // 设计规模 1000 t/d，AAO工艺，执行 GB18918-2002 一级A
+  const stationLS = await prisma.station.create({
+    data: {
+      name: "隆盛镇污水处理厂",
+      location: "四川省遂宁市隆盛镇原牛石村",
+      capacity: 1000,
+      dailyFlowActual: 536.47,
+      processType: "AAO",
+      status: "ONLINE",
+      gatewayId: "GW-LONGSHENG-001",
+      lastHeartbeat: new Date(),
+    },
+  });
+  console.log(`✅ 创建站点: ${stationLS.name} (${stationLS.id})`);
+
+  // 隆盛：实测日均药耗 → 每10s投加量（kg/次）
+  // 除磷剂 24.07 kg/d → 0.002786 kg/次；碳源 83.77 kg/d → 0.009695 kg/次
+  // 消毒剂 0.26 kg/d → 0.0000301 kg/次；PAM 1.48 kg/d → 0.0001713 kg/次
+  const LS_INTERVAL = 10; // simulator.py 默认间隔
+  const LS_SECS_DAY = 86400;
+  const lsFlowHourlyAvg = 536.47 / 24; // 22.35 m³/h
+
+  const sensorDefsLS: AnyPrismaArg[] = [
+    {
+      type: "PH",
+      name: "进水pH",
+      unit: "pH",
+      location: "进水井",
+      minNormal: 6.5, maxNormal: 8.5,
+      minPhysical: 0, maxPhysical: 14,
+    },
+    {
+      type: "DO",
+      name: "曝气池DO",
+      unit: "mg/L",
+      location: "曝气池",
+      minNormal: 1.5, maxNormal: 4.0,
+      minPhysical: 0, maxPhysical: 20,
+    },
+    {
+      type: "ORP",
+      name: "曝气池ORP",
+      unit: "mV",
+      location: "曝气池",
+      minNormal: -50, maxNormal: 200,
+      minPhysical: -500, maxPhysical: 500,
+    },
+    {
+      type: "FLOW_IN",
+      name: "进水流量",
+      unit: "m³/h",
+      location: "进水井",
+      minNormal: 5, maxNormal: 50,   // 1000t/d设计，实测536.47 → 时均22.35
+      minPhysical: 0, maxPhysical: 200,
+    },
+    // 药耗传感器：正常范围取实测均值 ±60%，物理上限取5×均值
+    {
+      type: "DOSING_PHOSPHORUS",
+      name: "除磷剂投加量",
+      unit: "kg/次",
+      location: "加药间",
+      minNormal: parseFloat((24.07 / LS_SECS_DAY * LS_INTERVAL * 0.4).toFixed(6)),
+      maxNormal: parseFloat((24.07 / LS_SECS_DAY * LS_INTERVAL * 1.6).toFixed(6)),
+      minPhysical: 0,
+      maxPhysical: parseFloat((24.07 / LS_SECS_DAY * LS_INTERVAL * 5).toFixed(6)),
+    },
+    {
+      type: "DOSING_CARBON",
+      name: "碳源投加量",
+      unit: "kg/次",
+      location: "加药间",
+      minNormal: parseFloat((83.77 / LS_SECS_DAY * LS_INTERVAL * 0.4).toFixed(6)),
+      maxNormal: parseFloat((83.77 / LS_SECS_DAY * LS_INTERVAL * 1.6).toFixed(6)),
+      minPhysical: 0,
+      maxPhysical: parseFloat((83.77 / LS_SECS_DAY * LS_INTERVAL * 5).toFixed(6)),
+    },
+    {
+      type: "DOSING_DISINFECTANT",
+      name: "消毒剂投加量",
+      unit: "kg/次",
+      location: "加药间",
+      minNormal: parseFloat((0.26 / LS_SECS_DAY * LS_INTERVAL * 0.4).toFixed(8)),
+      maxNormal: parseFloat((0.26 / LS_SECS_DAY * LS_INTERVAL * 1.6).toFixed(8)),
+      minPhysical: 0,
+      maxPhysical: parseFloat((0.26 / LS_SECS_DAY * LS_INTERVAL * 5).toFixed(8)),
+    },
+    {
+      type: "DOSING_PAM",
+      name: "PAM投加量",
+      unit: "kg/次",
+      location: "加药间",
+      minNormal: parseFloat((1.48 / LS_SECS_DAY * LS_INTERVAL * 0.4).toFixed(7)),
+      maxNormal: parseFloat((1.48 / LS_SECS_DAY * LS_INTERVAL * 1.6).toFixed(7)),
+      minPhysical: 0,
+      maxPhysical: parseFloat((1.48 / LS_SECS_DAY * LS_INTERVAL * 5).toFixed(7)),
+    },
+  ];
+
+  const sensorsLS = await Promise.all(
+    sensorDefsLS.map((def) => prisma.sensor.create({ data: { stationId: stationLS.id, ...def } }))
+  );
+  console.log(`✅ 创建传感器: ${sensorsLS.map((s) => s.name).join(", ")}`);
+
+  // 历史读数（24小时）
+  console.log("⏳ 生成隆盛厂历史读数（24小时）...");
+  const lsReadingsBatch: Array<{ sensorId: string; value: number; quality: number; timestamp: Date }> = [];
+  for (const sensor of sensorsLS) {
+    let lastVal: number | undefined;
+    for (let minutesAgo = 24 * 60; minutesAgo >= 0; minutesAgo -= 1) {
+      const ts = new Date(now.getTime() - minutesAgo * 60 * 1000);
+      const value = generateMockReading(sensor.type, lastVal, ts);
+      lastVal = value;
+      lsReadingsBatch.push({ sensorId: sensor.id, value, quality: Math.random() > 0.02 ? 100 : 60, timestamp: ts });
+    }
+  }
+  for (let i = 0; i < lsReadingsBatch.length; i += BATCH) {
+    await prisma.sensorReading.createMany({ data: lsReadingsBatch.slice(i, i + BATCH) });
+  }
+  for (const sensor of sensorsLS) {
+    const latest = lsReadingsBatch.filter((r) => r.sensorId === sensor.id).at(-1);
+    if (latest) await prisma.sensor.update({ where: { id: sensor.id }, data: { lastValue: latest.value, lastReadAt: latest.timestamp } });
+  }
+  console.log(`✅ 写入 ${lsReadingsBatch.length} 条隆盛厂历史读数`);
+
+  // ── 玉峰镇团结场污水处理站 ───────────────────────────────────────────────────
+  // 2025年实测：日均处理量 61.54 t/d，水质达标率 100%
+  // 设计规模 100 t/d，MBBR工艺，执行 GB18918-2002 一级A
+  const stationTJ = await prisma.station.create({
+    data: {
+      name: "玉峰镇团结场污水处理站",
+      location: "四川省遂宁市玉峰镇团结村",
+      capacity: 100,
+      dailyFlowActual: 61.54,
+      processType: "MBBR",
+      status: "ONLINE",
+      gatewayId: "GW-TUANJIE-001",
+      lastHeartbeat: new Date(),
+    },
+  });
+  console.log(`✅ 创建站点: ${stationTJ.name} (${stationTJ.id})`);
+
+  // 团结：实测日均药耗 → 每10s投加量（kg/次）
+  // 除磷剂 1.09 kg/d → 0.0001262 kg/次；碳源 7.20 kg/d → 0.0008333 kg/次
+  // 消毒剂 0.05 kg/d → 0.000005787 kg/次；PAM 无
+  const TJ_FLOW_HOURLY_AVG = 61.54 / 24; // 2.56 m³/h
+
+  const sensorDefsTJ: AnyPrismaArg[] = [
+    {
+      type: "PH",
+      name: "进水pH",
+      unit: "pH",
+      location: "进水井",
+      minNormal: 6.5, maxNormal: 8.5,
+      minPhysical: 0, maxPhysical: 14,
+    },
+    {
+      type: "DO",
+      name: "曝气池DO",
+      unit: "mg/L",
+      location: "曝气池",
+      minNormal: 1.5, maxNormal: 4.0,
+      minPhysical: 0, maxPhysical: 20,
+    },
+    {
+      type: "ORP",
+      name: "曝气池ORP",
+      unit: "mV",
+      location: "曝气池",
+      minNormal: -50, maxNormal: 200,
+      minPhysical: -500, maxPhysical: 500,
+    },
+    {
+      type: "FLOW_IN",
+      name: "进水流量",
+      unit: "m³/h",
+      location: "进水井",
+      minNormal: 0.5, maxNormal: 6.0,  // 100t/d设计，实测61.54 → 时均2.56
+      minPhysical: 0, maxPhysical: 30,
+    },
+    {
+      type: "DOSING_PHOSPHORUS",
+      name: "除磷剂投加量",
+      unit: "kg/次",
+      location: "加药间",
+      minNormal: parseFloat((1.09 / LS_SECS_DAY * LS_INTERVAL * 0.4).toFixed(8)),
+      maxNormal: parseFloat((1.09 / LS_SECS_DAY * LS_INTERVAL * 1.6).toFixed(8)),
+      minPhysical: 0,
+      maxPhysical: parseFloat((1.09 / LS_SECS_DAY * LS_INTERVAL * 5).toFixed(8)),
+    },
+    {
+      type: "DOSING_CARBON",
+      name: "碳源投加量",
+      unit: "kg/次",
+      location: "加药间",
+      minNormal: parseFloat((7.20 / LS_SECS_DAY * LS_INTERVAL * 0.4).toFixed(7)),
+      maxNormal: parseFloat((7.20 / LS_SECS_DAY * LS_INTERVAL * 1.6).toFixed(7)),
+      minPhysical: 0,
+      maxPhysical: parseFloat((7.20 / LS_SECS_DAY * LS_INTERVAL * 5).toFixed(7)),
+    },
+    {
+      type: "DOSING_DISINFECTANT",
+      name: "消毒剂投加量",
+      unit: "kg/次",
+      location: "加药间",
+      minNormal: parseFloat((0.05 / LS_SECS_DAY * LS_INTERVAL * 0.4).toFixed(9)),
+      maxNormal: parseFloat((0.05 / LS_SECS_DAY * LS_INTERVAL * 1.6).toFixed(9)),
+      minPhysical: 0,
+      maxPhysical: parseFloat((0.05 / LS_SECS_DAY * LS_INTERVAL * 5).toFixed(9)),
+    },
+  ];
+
+  const sensorsTJ = await Promise.all(
+    sensorDefsTJ.map((def) => prisma.sensor.create({ data: { stationId: stationTJ.id, ...def } }))
+  );
+  console.log(`✅ 创建传感器: ${sensorsTJ.map((s) => s.name).join(", ")}`);
+
+  console.log("⏳ 生成团结站历史读数（24小时）...");
+  const tjReadingsBatch: Array<{ sensorId: string; value: number; quality: number; timestamp: Date }> = [];
+  for (const sensor of sensorsTJ) {
+    let lastVal: number | undefined;
+    for (let minutesAgo = 24 * 60; minutesAgo >= 0; minutesAgo -= 1) {
+      const ts = new Date(now.getTime() - minutesAgo * 60 * 1000);
+      const value = generateMockReading(sensor.type, lastVal, ts);
+      lastVal = value;
+      tjReadingsBatch.push({ sensorId: sensor.id, value, quality: Math.random() > 0.02 ? 100 : 60, timestamp: ts });
+    }
+  }
+  for (let i = 0; i < tjReadingsBatch.length; i += BATCH) {
+    await prisma.sensorReading.createMany({ data: tjReadingsBatch.slice(i, i + BATCH) });
+  }
+  for (const sensor of sensorsTJ) {
+    const latest = tjReadingsBatch.filter((r) => r.sensorId === sensor.id).at(-1);
+    if (latest) await prisma.sensor.update({ where: { id: sensor.id }, data: { lastValue: latest.value, lastReadAt: latest.timestamp } });
+  }
+  console.log(`✅ 写入 ${tjReadingsBatch.length} 条团结站历史读数`);
+
+  // 抑制未使用变量的 lint 警告（真实设计中这些均值会用于前端展示）
+  void lsFlowHourlyAvg;
+  void TJ_FLOW_HOURLY_AVG;
+
   console.log("\n🎉 Seed 完成！");
-  console.log(`   站点ID: ${station.id}`);
-  console.log(`   传感器: ${sensors.length} 个`);
-  console.log(`   历史读数: ${readingsBatch.length} 条`);
+  console.log(`   Demo站: ${station.id}  (${sensors.length} 传感器, ${readingsBatch.length} 读数)`);
+  console.log(`   隆盛厂: ${stationLS.id} (${sensorsLS.length} 传感器, ${lsReadingsBatch.length} 读数)`);
+  console.log(`   团结站: ${stationTJ.id} (${sensorsTJ.length} 传感器, ${tjReadingsBatch.length} 读数)`);
   console.log("\n📌 PLACEHOLDER 清单（需真实数据替换）:");
   console.log("   • 传感器读数 → MQTT ingest API (/api/ingest/telemetry)");
   console.log("   • 告警诊断 → lib/placeholders.ts::generateAlertDiagnosis()");
