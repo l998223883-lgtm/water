@@ -66,22 +66,18 @@ export async function POST(req: Request) {
       reading.value < sensor.minPhysical || reading.value > sensor.maxPhysical;
 
     if (isPhysicalFault || isOutOfNormal) {
-      // 去重：同类型告警已有OPEN则不重复创建
-      const existing = await prisma.alert.findFirst({
-        where: {
-          stationId: station.id,
-          sensorId: sensor.id,
-          status: "OPEN",
-          type: isPhysicalFault ? "SENSOR_FAULT" : reading.value < sensor.minNormal ? "THRESHOLD_LOW" : "THRESHOLD_HIGH",
-        },
-      });
+      const alertType = isPhysicalFault
+        ? "SENSOR_FAULT"
+        : reading.value < sensor.minNormal
+        ? "THRESHOLD_LOW"
+        : "THRESHOLD_HIGH";
 
-      if (!existing) {
-        const alertType = isPhysicalFault
-          ? "SENSOR_FAULT"
-          : reading.value < sensor.minNormal
-          ? "THRESHOLD_LOW"
-          : "THRESHOLD_HIGH";
+      // 去重：事务内检查+创建，避免并发重复告警
+      const created = await prisma.$transaction(async (tx) => {
+        const existing = await tx.alert.findFirst({
+          where: { stationId: station.id, sensorId: sensor.id, status: "OPEN", type: alertType as never },
+        });
+        if (existing) return null;
 
         const threshold = reading.value < sensor.minNormal ? sensor.minNormal : sensor.maxNormal;
         const diagnosis = generateAlertDiagnosis({
@@ -91,7 +87,7 @@ export async function POST(req: Request) {
           threshold,
         });
 
-        const alert = await prisma.alert.create({
+        const alert = await tx.alert.create({
           data: {
             stationId: station.id,
             sensorId: sensor.id,
@@ -102,8 +98,7 @@ export async function POST(req: Request) {
           },
         });
 
-        // 自动创建工单
-        await prisma.workOrder.create({
+        await tx.workOrder.create({
           data: {
             stationId: station.id,
             alertId: alert.id,
@@ -113,8 +108,10 @@ export async function POST(req: Request) {
           },
         });
 
-        newAlerts.push(alert.id);
-      }
+        return alert;
+      });
+
+      if (created) newAlerts.push(created.id);
     }
   }
 

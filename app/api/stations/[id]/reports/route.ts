@@ -24,9 +24,20 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const { month } = await req.json() as { month: string };
+  let month: string;
+  try {
+    ({ month } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "invalid json" }, { status: 400 });
+  }
+  if (!/^\d{4}-\d{2}$/.test(month)) {
+    return NextResponse.json({ error: "month must be in YYYY-MM format" }, { status: 400 });
+  }
 
   const [year, mon] = month.split("-").map(Number);
+  if (mon < 1 || mon > 12) {
+    return NextResponse.json({ error: "invalid month value" }, { status: 400 });
+  }
   const start = new Date(year, mon - 1, 1);
   const end = new Date(year, mon, 0, 23, 59, 59);
 

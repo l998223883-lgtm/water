@@ -8,7 +8,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const { searchParams } = new URL(req.url);
+  const VALID_SENSOR_TYPES = ["PH", "DO", "ORP", "FLOW_IN", "DOSING_PHOSPHORUS", "DOSING_CARBON", "DOSING_DISINFECTANT", "DOSING_PAM"];
   const sensorType = searchParams.get("sensor") ?? "DO";
+  if (!VALID_SENSOR_TYPES.includes(sensorType)) {
+    return NextResponse.json({ error: "invalid sensor type" }, { status: 400 });
+  }
   const range = searchParams.get("range") ?? "24h";
   const agg = searchParams.get("agg") ?? "5m"; // 聚合粒度
 

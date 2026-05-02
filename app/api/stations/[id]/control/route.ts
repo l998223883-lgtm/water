@@ -36,11 +36,18 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const body = await req.json() as {
-    device: "BLOWER" | "DOSING_PUMP";
-    value: number;
-    source?: "MANUAL" | "ALGORITHM";
-  };
+  let body: { device: "BLOWER" | "DOSING_PUMP"; value: number; source?: "MANUAL" | "ALGORITHM" };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "invalid json" }, { status: 400 });
+  }
+  if (!body.device || !["BLOWER", "DOSING_PUMP"].includes(body.device)) {
+    return NextResponse.json({ error: "invalid device" }, { status: 400 });
+  }
+  if (typeof body.value !== "number" || !isFinite(body.value)) {
+    return NextResponse.json({ error: "value must be a finite number" }, { status: 400 });
+  }
 
   const station = await prisma.station.findUnique({
     where: { id: params.id },

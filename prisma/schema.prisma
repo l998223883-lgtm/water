@@ -156,6 +156,7 @@ model Alert {
 
   @@index([stationId, status])
   @@index([stationId, triggeredAt(sort: Desc)])
+  @@index([stationId, sensorId, type, status])
   @@map("alerts")
 }
 

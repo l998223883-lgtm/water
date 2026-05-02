@@ -3,7 +3,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
-  const { action } = await req.json() as { action: string };
+  let action: string;
+  try {
+    ({ action } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "invalid json" }, { status: 400 });
+  }
   const station = await prisma.station.findFirst({ orderBy: { createdAt: "asc" }, include: { sensors: true } });
   if (!station) return NextResponse.json({ error: "no station" }, { status: 404 });
 
