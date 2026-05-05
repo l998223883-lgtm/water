@@ -1,6 +1,8 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verifyHmac } from "@/lib/auth";
+import { ControlSchema, formatZodError } from "@/lib/schemas";
 
 // 保底防线配置（三道防线第一道：物理阈值）
 const SAFETY_LIMITS = {
@@ -24,30 +26,39 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const logs = await prisma.controlLog.findMany({
-    where: { stationId: params.id },
-    orderBy: { issuedAt: "desc" },
-    take: 20,
-  });
-  return NextResponse.json(logs);
+  try {
+    const logs = await prisma.controlLog.findMany({
+      where: { stationId: params.id },
+      orderBy: { issuedAt: "desc" },
+      take: 20,
+    });
+    return NextResponse.json(logs);
+  } catch {
+    return NextResponse.json({ error: "internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  let body: { device: "BLOWER" | "DOSING_PUMP"; value: number; source?: "MANUAL" | "ALGORITHM" };
+  const rawBody = await req.text();
+  const auth = verifyHmac("CONTROL_SECRET", rawBody, req.headers);
+  if (!auth.ok) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  let parsed: unknown;
   try {
-    body = await req.json();
+    parsed = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
-  if (!body.device || !["BLOWER", "DOSING_PUMP"].includes(body.device)) {
-    return NextResponse.json({ error: "invalid device" }, { status: 400 });
+  const result = ControlSchema.safeParse(parsed);
+  if (!result.success) {
+    return NextResponse.json({ error: formatZodError(result.error) }, { status: 400 });
   }
-  if (typeof body.value !== "number" || !isFinite(body.value)) {
-    return NextResponse.json({ error: "value must be a finite number" }, { status: 400 });
-  }
+  const body = result.data;
 
   const station = await prisma.station.findUnique({
     where: { id: params.id },

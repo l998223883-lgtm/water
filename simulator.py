@@ -19,6 +19,9 @@ simulator.py — 模拟500吨/天MBBR污水站真实数据
 """
 
 import math
+import os
+import hmac
+import hashlib
 import random
 import time
 import json
@@ -208,10 +211,22 @@ def push(api_url: str, readings: List[dict]) -> Optional[dict]:
         "readings": readings,
     }).encode("utf-8")
 
+    headers = {"Content-Type": "application/json"}
+    secret = os.environ.get("INGEST_SECRET")
+    if secret:
+        ts = str(int(time.time() * 1000))
+        sig = hmac.new(
+            secret.encode("utf-8"),
+            f"{ts}.".encode("utf-8") + payload,
+            hashlib.sha256,
+        ).hexdigest()
+        headers["X-Timestamp"] = ts
+        headers["X-Signature"] = sig
+
     req = urllib.request.Request(
         f"{api_url}/api/ingest/telemetry",
         data=payload,
-        headers={"Content-Type": "application/json"},
+        headers=headers,
         method="POST",
     )
     try:

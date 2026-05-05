@@ -39,9 +39,7 @@ export async function GET(
   const aggMap: Record<string, number> = { "1m": 1, "5m": 5, "15m": 15, "1h": 60 };
   const aggMinutes = aggMap[agg] ?? 5;
 
-  // 标准 PostgreSQL date_trunc 聚合
-  // PLACEHOLDER: TimescaleDB time_bucket() 性能更好，数据量大后替换
-  // PLACEHOLDER: TimescaleDB time_bucket() 在数据量大后替换以提升性能
+  // 标准 PostgreSQL date_trunc 聚合，数据量大后可替换为 TimescaleDB time_bucket()
   const rows = await prisma.$queryRaw<{ ts: Date; avg_value: number; min_value: number; max_value: number }[]>`
     SELECT
       date_trunc('minute', timestamp) -
@@ -56,19 +54,30 @@ export async function GET(
     ORDER BY 1 ASC
   `;
 
-  return NextResponse.json({
-    sensorId: sensor.id,
-    sensorType,
-    unit: sensor.unit,
-    minNormal: sensor.minNormal,
-    maxNormal: sensor.maxNormal,
-    range,
-    agg,
-    data: rows.map((r) => ({
-      ts: r.ts.toISOString(),
-      value: Number(r.avg_value),
-      min: Number(r.min_value),
-      max: Number(r.max_value),
-    })),
-  });
+  const MAX_POINTS = 2000;
+  const data = rows.slice(0, MAX_POINTS).map((r) => ({
+    ts: r.ts.toISOString(),
+    value: Number(r.avg_value),
+    min: Number(r.min_value),
+    max: Number(r.max_value),
+  }));
+
+  return NextResponse.json(
+    {
+      sensorId: sensor.id,
+      sensorType,
+      unit: sensor.unit,
+      minNormal: sensor.minNormal,
+      maxNormal: sensor.maxNormal,
+      range,
+      agg,
+      truncated: rows.length > MAX_POINTS,
+      data,
+    },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=30, stale-while-revalidate=300",
+      },
+    }
+  );
 }

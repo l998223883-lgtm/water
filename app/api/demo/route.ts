@@ -1,14 +1,24 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { DemoSchema, formatZodError } from "@/lib/schemas";
 
 export async function POST(req: Request) {
-  let action: string;
+  if (process.env.NODE_ENV === "production" && process.env.ALLOW_DEMO_API !== "1") {
+    return NextResponse.json({ error: "demo endpoint disabled in production" }, { status: 403 });
+  }
+
+  let parsed: unknown;
   try {
-    ({ action } = await req.json());
+    parsed = await req.json();
   } catch {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
+  const result = DemoSchema.safeParse(parsed);
+  if (!result.success) {
+    return NextResponse.json({ error: formatZodError(result.error) }, { status: 400 });
+  }
+  const { action } = result.data;
   const station = await prisma.station.findFirst({ orderBy: { createdAt: "asc" }, include: { sensors: true } });
   if (!station) return NextResponse.json({ error: "no station" }, { status: 404 });
 
@@ -49,8 +59,6 @@ export async function POST(req: Request) {
         diagnosis: "暴雨导致进水量激增至设计值的 283%，建议：① 立即开启备用曝气风机至最大频率 50Hz；② 减少回流比至 50%；③ 持续监测 DO，目标恢复至 1.5 mg/L 以上。",
         status: "OPEN",
         triggeredAt: new Date(),
-        value: 42.5,
-        threshold: 25,
       }
     });
     return NextResponse.json({ ok: true, message: "已触发暴雨冲击事件" });
@@ -72,8 +80,6 @@ export async function POST(req: Request) {
           diagnosis: "pH 读数超出理论上限，传感器可能断线或探头污染严重。建议：① 检查探头与变送器接线；② 取水样人工比对；③ 清洗或更换探头。",
           status: "OPEN",
           triggeredAt: new Date(),
-          value: 14.0,
-          threshold: 9.0,
         }
       });
     }

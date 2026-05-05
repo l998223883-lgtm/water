@@ -42,28 +42,34 @@ export function AlertList({ stationId, initialAlerts }: AlertListProps) {
 
   async function handleAction(alertId: string, action: "acknowledge" | "resolve") {
     setLoading(alertId);
-    await fetch(`/api/stations/${stationId}/alerts`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ alertId, action }),
-    });
-
-    setAlerts((prev) =>
-      prev.map((a) =>
-        a.id === alertId
-          ? {
-              ...a,
-              status: action === "resolve" ? "RESOLVED" : "ACKNOWLEDGED",
-            }
-          : a
-      )
-    );
-    setLoading(null);
+    try {
+      const res = await fetch(`/api/stations/${stationId}/alerts`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ alertId, action }),
+      });
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        alert(`操作失败 (${res.status}): ${msg || "请稍后重试"}`);
+        return;
+      }
+      setAlerts((prev) =>
+        prev.map((a) =>
+          a.id === alertId
+            ? { ...a, status: action === "resolve" ? "RESOLVED" : "ACKNOWLEDGED" }
+            : a
+        )
+      );
+    } catch (err) {
+      alert(`网络错误: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setLoading(null);
+    }
   }
 
   if (alerts.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-200 py-8 text-center text-sm text-slate-400">
+      <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 py-8 text-center text-sm text-slate-400 dark:text-slate-500">
         暂无告警记录
       </div>
     );
@@ -86,24 +92,24 @@ export function AlertList({ stationId, initialAlerts }: AlertListProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-medium text-slate-800 truncate">
+                  <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
                     {alert.message}
                   </p>
                   <Badge variant="outline" className={`text-[10px] ${cfg.badge}`}>
                     {alert.severity}
                   </Badge>
-                  <Badge variant="outline" className="text-[10px] text-slate-500">
+                  <Badge variant="outline" className="text-[10px] text-slate-500 dark:text-slate-400">
                     {statusLabel[alert.status]}
                   </Badge>
                 </div>
 
                 {alert.diagnosis && (
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                     {alert.diagnosis}
                   </p>
                 )}
 
-                <p className="text-[11px] text-slate-400 mt-1.5">
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1.5">
                   {formatDistanceToNow(new Date(alert.triggeredAt), {
                     locale: zhCN,
                     addSuffix: true,

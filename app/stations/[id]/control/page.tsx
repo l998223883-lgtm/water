@@ -52,15 +52,15 @@ export default async function ControlPage({
       <div>
         <Link
           href={`/stations/${station.id}`}
-          className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 mb-2"
+          className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300 mb-2"
         >
           <ArrowLeft className="h-3 w-3" />
           返回站点详情
         </Link>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-slate-800">控制下发</h1>
-            <p className="text-sm text-slate-500 mt-0.5">{station.name}</p>
+            <h1 className="text-xl font-semibold text-slate-800 dark:text-slate-100">控制下发</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">{station.name}</p>
           </div>
           <Badge variant="outline" className="border-blue-200 text-blue-700 bg-blue-50 gap-1">
             <Shield className="h-3 w-3" />
@@ -132,18 +132,18 @@ export default async function ControlPage({
         </div>
       )}
       {!rec.safetyTriggered && (
-        <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-500">
-          <span className="font-medium text-slate-600">算法建议说明：</span> {rec.reason}
-          <span className="ml-2 text-slate-400">（本地模糊控制，{snapshot.do} mg/L DO，流量 {snapshot.flowIn} m³/h）</span>
+        <div className="rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
+          <span className="font-medium text-slate-600 dark:text-slate-300">算法建议说明：</span> {rec.reason}
+          <span className="ml-2 text-slate-400 dark:text-slate-500">（本地模糊控制，{snapshot.do} mg/L DO，流量 {snapshot.flowIn} m³/h）</span>
         </div>
       )}
 
       {/* 控制日志 */}
       <div>
-        <h2 className="text-sm font-medium text-slate-700 mb-3">最近控制日志</h2>
+        <h2 className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-3">最近控制日志</h2>
         <div className="rounded-xl border overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-xs text-slate-500">
+            <thead className="bg-slate-50 dark:bg-slate-900/40 text-xs text-slate-500 dark:text-slate-400">
               <tr>
                 <th className="px-4 py-2.5 text-left">时间</th>
                 <th className="px-4 py-2.5 text-left">设备</th>
@@ -153,10 +153,10 @@ export default async function ControlPage({
                 <th className="px-4 py-2.5 text-left">回执</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {station.controlLogs.map((log) => (
-                <tr key={log.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-2.5 text-slate-500 text-xs">
+                <tr key={log.id} className="hover:bg-slate-50 dark:bg-slate-900/40">
+                  <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">
                     {new Date(log.issuedAt).toLocaleString("zh-CN", {
                       month: "2-digit",
                       day: "2-digit",
@@ -167,7 +167,7 @@ export default async function ControlPage({
                   <td className="px-4 py-2.5 font-medium text-sm">
                     {log.device === "BLOWER" ? "🌀 鼓风机" : "💉 加药泵"}
                   </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-slate-500">
+                  <td className="px-4 py-2.5 text-right tabular-nums text-slate-500 dark:text-slate-400">
                     {log.oldValue}
                   </td>
                   <td className="px-4 py-2.5 text-right tabular-nums font-semibold">
@@ -186,7 +186,7 @@ export default async function ControlPage({
                           ? "border-orange-200 text-orange-600 bg-orange-50"
                           : log.source === "MANUAL"
                           ? "border-blue-200 text-blue-600 bg-blue-50"
-                          : "border-slate-200 text-slate-500"
+                          : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
                       }`}
                     >
                       {log.source === "SAFETY" ? "⚡ 保底防线" : log.source === "MANUAL" ? "👤 人工" : "🤖 算法"}
@@ -196,7 +196,7 @@ export default async function ControlPage({
                     {log.confirmedAt ? (
                       <span className="text-green-600">✓ 已确认</span>
                     ) : (
-                      <span className="text-slate-400">
+                      <span className="text-slate-400 dark:text-slate-500">
                         {/* PLACEHOLDER: 真实环境等待 MQTT ACK */}
                         待回执
                       </span>
@@ -206,7 +206,7 @@ export default async function ControlPage({
               ))}
               {station.controlLogs.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-6 text-center text-slate-400 text-sm">
+                  <td colSpan={6} className="px-4 py-6 text-center text-slate-400 dark:text-slate-500 text-sm">
                     暂无控制记录
                   </td>
                 </tr>

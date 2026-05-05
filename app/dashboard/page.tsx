@@ -6,6 +6,7 @@ import { predictSoftMeasure } from "@/lib/placeholders";
 import { formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { AutoRefresh } from "@/components/layout/AutoRefresh";
+import { LastUpdated } from "@/components/dashboard/LastUpdated";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ async function getStationData() {
 
 const statusConfig = {
   ONLINE:      { label: "在线",  pill: "bg-green-100 text-green-700" },
-  OFFLINE:     { label: "离线",  pill: "bg-slate-100 text-slate-500" },
+  OFFLINE:     { label: "离线",  pill: "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400" },
   MAINTENANCE: { label: "维护中", pill: "bg-amber-100 text-amber-700" },
   ALARM:       { label: "告警",  pill: "bg-red-100 text-red-600" },
 };
@@ -41,10 +42,10 @@ export default async function DashboardPage() {
   if (!stations) {
     return (
       <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
-        <WifiOff className="w-12 h-12 text-slate-300" />
-        <h2 className="text-lg font-semibold text-slate-600">数据库未连接</h2>
-        <p className="text-sm text-slate-400 max-w-sm">
-          请在 Vercel 项目设置中配置 <code className="bg-slate-100 px-1 rounded">DATABASE_URL</code> 环境变量后重新部署。
+        <WifiOff className="w-12 h-12 text-slate-300 dark:text-slate-600" />
+        <h2 className="text-lg font-semibold text-slate-600 dark:text-slate-300">数据库未连接</h2>
+        <p className="text-sm text-slate-400 dark:text-slate-500 max-w-sm">
+          请在 Vercel 项目设置中配置 <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">DATABASE_URL</code> 环境变量后重新部署。
         </p>
       </div>
     );
@@ -59,8 +60,8 @@ export default async function DashboardPage() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">运营总览</h1>
-          <p className="text-sm text-slate-400 mt-0.5">实时监控所有污水处理站运行状态</p>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">运营总览</h1>
+          <p className="text-sm text-slate-400 dark:text-slate-500 mt-0.5">实时监控所有污水处理站运行状态</p>
         </div>
         <AutoRefresh intervalMs={15000} />
       </div>
@@ -68,20 +69,20 @@ export default async function DashboardPage() {
       {/* KPI row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Online stations */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700/60">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">站点在线</p>
-              <p className="text-4xl font-bold text-slate-800 mt-1 leading-none">
+              <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">站点在线</p>
+              <p className="text-4xl font-bold text-slate-800 dark:text-slate-100 mt-1 leading-none">
                 {onlineCount}
-                <span className="text-lg font-normal text-slate-300 ml-1">/ {stations.length}</span>
+                <span className="text-lg font-normal text-slate-300 dark:text-slate-600 ml-1">/ {stations.length}</span>
               </p>
             </div>
             <div className="rounded-xl bg-blue-50 p-2.5">
               <Wifi className="h-5 w-5 text-blue-500" />
             </div>
           </div>
-          <div className="mt-4 h-1.5 rounded-full bg-slate-100">
+          <div className="mt-4 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800">
             <div
               className="h-1.5 rounded-full bg-blue-500 transition-all"
               style={{ width: stations.length ? `${(onlineCount / stations.length) * 100}%` : "0%" }}
@@ -90,11 +91,11 @@ export default async function DashboardPage() {
         </div>
 
         {/* Alerts */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700/60">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">未处理告警</p>
-              <p className={`text-4xl font-bold mt-1 leading-none ${totalOpen > 0 ? "text-[#E8472A]" : "text-slate-800"}`}>
+              <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">未处理告警</p>
+              <p className={`text-4xl font-bold mt-1 leading-none ${totalOpen > 0 ? "text-[#E8472A]" : "text-slate-800 dark:text-slate-100"}`}>
                 {totalOpen}
               </p>
             </div>
@@ -104,24 +105,19 @@ export default async function DashboardPage() {
                 : <CheckCircle2 className="h-5 w-5 text-green-500" />}
             </div>
           </div>
-          <p className="text-xs text-slate-400 mt-4">
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-4">
             {totalOpen > 0 ? `${totalOpen} 条需要处理` : "所有告警已清除"}
           </p>
         </div>
 
         {/* Last update */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700/60">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">最后更新</p>
-              <p className="text-2xl font-bold text-slate-800 mt-1 leading-none">
-                {new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
-              </p>
-              <p className="text-xs text-slate-400 mt-1">
-                {new Date().toLocaleDateString("zh-CN", { month: "long", day: "numeric" })}
-              </p>
+              <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">最后更新</p>
+              <LastUpdated />
             </div>
-            <div className="rounded-xl bg-slate-50 p-2.5">
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-900/40 p-2.5">
               <span className="relative flex h-3 w-3">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-60" />
                 <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500" />
@@ -151,26 +147,26 @@ export default async function DashboardPage() {
             : "从未连接";
 
           return (
-            <div key={station.id} className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+            <div key={station.id} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700/60 overflow-hidden">
               {/* Card header */}
-              <div className="px-6 pt-5 pb-4 border-b border-slate-100">
+              <div className="px-6 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2.5">
-                      <h2 className="text-base font-bold text-slate-800">{station.name}</h2>
+                      <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">{station.name}</h2>
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${sc.pill}`}>
                         {sc.label}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                       {station.location} · {station.processType} · 设计 {station.capacity} 吨/天
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="flex items-center gap-1.5 justify-end text-xs text-slate-400">
+                    <div className="flex items-center gap-1.5 justify-end text-xs text-slate-400 dark:text-slate-500">
                       {isOnline
                         ? <Wifi className="h-3.5 w-3.5 text-green-500" />
-                        : <WifiOff className="h-3.5 w-3.5 text-slate-300" />}
+                        : <WifiOff className="h-3.5 w-3.5 text-slate-300 dark:text-slate-600" />}
                       <span>{heartbeatAge}</span>
                     </div>
                     {station._count.alerts > 0 && (
@@ -201,24 +197,24 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* Soft measurement bar */}
-                <div className="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">
+                <div className="flex items-center justify-between rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 px-4 py-3">
                   <div className="flex gap-6 text-sm">
                     <div>
-                      <span className="text-slate-400 text-xs">出水 COD 预测</span>
-                      <p className={`font-bold text-base leading-tight ${soft.codOut > 50 ? "text-[#E8472A]" : "text-slate-800"}`}>
-                        {soft.codOut} <span className="text-xs font-normal text-slate-400">mg/L</span>
+                      <span className="text-slate-400 dark:text-slate-500 text-xs">出水 COD 预测</span>
+                      <p className={`font-bold text-base leading-tight ${soft.codOut > 50 ? "text-[#E8472A]" : "text-slate-800 dark:text-slate-100"}`}>
+                        {soft.codOut} <span className="text-xs font-normal text-slate-400 dark:text-slate-500">mg/L</span>
                       </p>
-                      <p className="text-[10px] text-slate-400">目标 &lt;50</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500">目标 &lt;50</p>
                     </div>
                     <div>
-                      <span className="text-slate-400 text-xs">氨氮预测</span>
-                      <p className={`font-bold text-base leading-tight ${soft.nh3nOut > 5 ? "text-[#E8472A]" : "text-slate-800"}`}>
-                        {soft.nh3nOut} <span className="text-xs font-normal text-slate-400">mg/L</span>
+                      <span className="text-slate-400 dark:text-slate-500 text-xs">氨氮预测</span>
+                      <p className={`font-bold text-base leading-tight ${soft.nh3nOut > 5 ? "text-[#E8472A]" : "text-slate-800 dark:text-slate-100"}`}>
+                        {soft.nh3nOut} <span className="text-xs font-normal text-slate-400 dark:text-slate-500">mg/L</span>
                       </p>
-                      <p className="text-[10px] text-slate-400">目标 &lt;5</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500">目标 &lt;5</p>
                     </div>
                     <div className="flex items-center">
-                      <span className="text-[11px] text-slate-300 bg-slate-100 rounded-lg px-2 py-1">
+                      <span className="text-[11px] text-slate-300 dark:text-slate-600 bg-slate-100 dark:bg-slate-800 rounded-lg px-2 py-1">
                         本地推理 · {soft.source === "fallback" ? "经验公式" : "LightGBM"}
                       </span>
                     </div>
@@ -237,7 +233,7 @@ export default async function DashboardPage() {
       </div>
 
       {stations.length === 0 && (
-        <div className="rounded-2xl border-2 border-dashed border-slate-200 p-16 text-center text-slate-400 bg-white">
+        <div className="rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 p-16 text-center text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900">
           <p className="font-semibold">暂无站点数据</p>
           <p className="text-sm mt-1">运行 npm run db:seed 导入演示数据</p>
         </div>

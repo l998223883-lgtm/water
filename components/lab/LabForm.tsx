@@ -62,16 +62,26 @@ export function LabForm({ stationId, initialSamples }: LabFormProps) {
       notes: form.notes ?? null,
     };
 
-    const res = await fetch("/api/lab", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const sample = await res.json();
-    setSamples((prev) => [{ ...sample, sampledAt: sample.sampledAt, createdAt: sample.createdAt }, ...prev]);
-    setForm({ sampledAt: new Date().toISOString().slice(0, 10) });
-    setSuccess(true);
-    setSubmitting(false);
+    try {
+      const res = await fetch("/api/lab", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        alert(`录入失败 (${res.status}): ${msg || "请检查输入后重试"}`);
+        return;
+      }
+      const sample = await res.json();
+      setSamples((prev) => [{ ...sample, sampledAt: sample.sampledAt, createdAt: sample.createdAt }, ...prev]);
+      setForm({ sampledAt: new Date().toISOString().slice(0, 10) });
+      setSuccess(true);
+    } catch (err) {
+      alert(`网络错误: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -88,23 +98,23 @@ export function LabForm({ stationId, initialSamples }: LabFormProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-slate-500 mb-1 block">采样日期 *</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">采样日期 *</label>
                 <input
                   type="date"
                   required
                   value={form.sampledAt ?? ""}
                   onChange={(e) => handleChange("sampledAt", e.target.value)}
-                  className="w-full rounded-md border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-500 mb-1 block">备注</label>
+                <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">备注</label>
                 <input
                   type="text"
                   value={form.notes ?? ""}
                   onChange={(e) => handleChange("notes", e.target.value)}
                   placeholder="可选，如采样位置/天气等"
-                  className="w-full rounded-md border border-slate-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -116,9 +126,9 @@ export function LabForm({ stationId, initialSamples }: LabFormProps) {
                 const overLimit = f.limit !== null && num !== null && num > f.limit;
                 return (
                   <div key={f.key}>
-                    <label className="text-xs text-slate-500 mb-1 block">
+                    <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">
                       {f.label}
-                      <span className="text-slate-400 ml-1">({f.unit})</span>
+                      <span className="text-slate-400 dark:text-slate-500 ml-1">({f.unit})</span>
                     </label>
                     <input
                       type="number"
@@ -128,7 +138,7 @@ export function LabForm({ stationId, initialSamples }: LabFormProps) {
                       onChange={(e) => handleChange(f.key, e.target.value)}
                       placeholder={f.placeholder}
                       className={`w-full rounded-md border px-2 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        overLimit ? "border-red-300 bg-red-50" : "border-slate-200"
+                        overLimit ? "border-red-300 bg-red-50" : "border-slate-200 dark:border-slate-700"
                       }`}
                     />
                     {overLimit && (
@@ -157,11 +167,11 @@ export function LabForm({ stationId, initialSamples }: LabFormProps) {
 
       {/* 历史记录 */}
       <div>
-        <h2 className="text-sm font-medium text-slate-700 mb-2">历史化验记录</h2>
+        <h2 className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">历史化验记录</h2>
         {samples.length > 0 ? (
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-xs text-slate-500">
+              <thead className="bg-slate-50 dark:bg-slate-900/40 text-xs text-slate-500 dark:text-slate-400">
                 <tr>
                   <th className="px-4 py-2.5 text-left">采样日期</th>
                   {FIELDS.map((f) => (
@@ -172,10 +182,10 @@ export function LabForm({ stationId, initialSamples }: LabFormProps) {
                   <th className="px-4 py-2.5 text-left">备注</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {samples.map((s) => (
-                  <tr key={s.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-2.5 text-slate-500 text-xs">
+                  <tr key={s.id} className="hover:bg-slate-50 dark:bg-slate-900/40">
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">
                       {new Date(s.sampledAt).toLocaleDateString("zh-CN")}
                     </td>
                     {FIELDS.map((f) => {
@@ -190,14 +200,14 @@ export function LabForm({ stationId, initialSamples }: LabFormProps) {
                         </td>
                       );
                     })}
-                    <td className="px-4 py-2.5 text-xs text-slate-400">{s.notes ?? "—"}</td>
+                    <td className="px-4 py-2.5 text-xs text-slate-400 dark:text-slate-500">{s.notes ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-slate-200 py-8 text-center text-xs text-slate-400">
+          <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 py-8 text-center text-xs text-slate-400 dark:text-slate-500">
             暂无化验记录
           </div>
         )}

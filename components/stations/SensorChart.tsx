@@ -35,6 +35,7 @@ const RANGE_OPTIONS = [
   { label: "6小时", value: "6h", agg: "5m" },
   { label: "24小时", value: "24h", agg: "5m" },
   { label: "48小时", value: "48h", agg: "15m" },
+  { label: "7天", value: "7d", agg: "1h" },
 ];
 
 export function SensorChart({
@@ -52,13 +53,17 @@ export function SensorChart({
 
   const fetchData = useCallback(async () => {
     const opt = RANGE_OPTIONS.find((r) => r.value === range)!;
-    const res = await fetch(
-      `/api/stations/${stationId}/readings?sensor=${sensorType}&range=${range}&agg=${opt.agg}`
-    );
-    if (!res.ok) return;
-    const json = await res.json();
-    setData(json.data ?? []);
-    setLoading(false);
+    try {
+      const res = await fetch(
+        `/api/stations/${stationId}/readings?sensor=${sensorType}&range=${range}&agg=${opt.agg}`
+      );
+      if (res.ok) {
+        const json = await res.json();
+        setData(json.data ?? []);
+      }
+    } finally {
+      setLoading(false);
+    }
   }, [stationId, sensorType, range]);
 
   useEffect(() => {
@@ -79,11 +84,11 @@ export function SensorChart({
   }));
 
   return (
-    <div className="rounded-xl border bg-white p-4">
+    <div className="rounded-xl border bg-white dark:bg-slate-900 p-4">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <p className="text-sm font-medium text-slate-700">{sensorName}</p>
-          <p className="text-xs text-slate-400">单位: {unit} · 正常范围: {minNormal}~{maxNormal}</p>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{sensorName}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">单位: {unit} · 正常范围: {minNormal}~{maxNormal}</p>
         </div>
         <div className="flex gap-1">
           {RANGE_OPTIONS.map((opt) => (
@@ -93,7 +98,7 @@ export function SensorChart({
               className={`rounded px-2 py-0.5 text-xs transition-colors ${
                 range === opt.value
                   ? "bg-blue-600 text-white"
-                  : "text-slate-500 hover:bg-slate-100"
+                  : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:bg-slate-800"
               }`}
             >
               {opt.label}

@@ -56,7 +56,7 @@ function MonthSelector({
           className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${
             m === selected
               ? "bg-blue-600 text-white"
-              : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+              : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-900/40"
           }`}
         >
           {format(new Date(m + "-01"), "yyyy年M月", { locale: zhCN })}
@@ -126,14 +126,14 @@ export function ReportViewer({
               <CardTitle className="text-sm flex items-center gap-2">
                 <Sparkles className="h-3.5 w-3.5 text-blue-500" />
                 执行摘要
-                <Badge variant="outline" className="text-[10px] text-slate-400 ml-1">
+                <Badge variant="outline" className="text-[10px] text-slate-400 dark:text-slate-500 ml-1">
                   {/* PLACEHOLDER: P1接入 Claude Haiku 后显示 "AI生成" */}
                   模板生成 [PLACEHOLDER]
                 </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-600 leading-relaxed">{report.summary}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{report.summary}</p>
             </CardContent>
           </Card>
 
@@ -147,10 +147,10 @@ export function ReportViewer({
             ].map(({ label, value, ok }) => (
               <Card key={label}>
                 <CardContent className="pt-4">
-                  <p className={`text-2xl font-bold ${ok ? "text-slate-800" : "text-red-600"}`}>
+                  <p className={`text-2xl font-bold ${ok ? "text-slate-800 dark:text-slate-100" : "text-red-600"}`}>
                     {value}
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5">{label}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>
                   <div className={`mt-1.5 h-1 rounded-full ${ok ? "bg-green-400" : "bg-red-400"}`} />
                 </CardContent>
               </Card>
@@ -158,47 +158,47 @@ export function ReportViewer({
           </div>
 
           {/* PLACEHOLDER 指标 */}
-          <div className="rounded-xl border border-dashed border-slate-200 px-4 py-3 grid grid-cols-3 gap-4 text-sm">
+          <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 px-4 py-3 grid grid-cols-3 gap-4 text-sm">
             {[
               { label: "月耗电量", value: m.energyKwh, unit: "kWh", placeholder: "接电表后自动填入" },
               { label: "PAC药耗", value: m.pacKg, unit: "kg", placeholder: "接药耗系统后填入" },
               { label: "化验次数", value: m.labSampleCount, unit: "次", placeholder: null },
             ].map(({ label, value, unit, placeholder }) => (
               <div key={label}>
-                <p className="text-xs text-slate-400">{label}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">{label}</p>
                 {value != null ? (
-                  <p className="font-semibold text-slate-700">{value} {unit}</p>
+                  <p className="font-semibold text-slate-700 dark:text-slate-200">{value} {unit}</p>
                 ) : (
-                  <p className="text-slate-300 text-xs">{placeholder}</p>
+                  <p className="text-slate-300 dark:text-slate-600 text-xs">{placeholder}</p>
                 )}
               </div>
             ))}
           </div>
 
-          <p className="text-xs text-slate-400 text-right">
+          <p className="text-xs text-slate-400 dark:text-slate-500 text-right">
             报表生成时间: {new Date(report.createdAt).toLocaleString("zh-CN")}
           </p>
         </>
       ) : (
-        <div className="rounded-xl border-2 border-dashed border-slate-200 py-16 text-center">
-          <FileText className="h-8 w-8 text-slate-300 mx-auto mb-3" />
-          <p className="text-sm font-medium text-slate-500">
+        <div className="rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 py-16 text-center">
+          <FileText className="h-8 w-8 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             {format(new Date(selectedMonth + "-01"), "yyyy年M月", { locale: zhCN })} 暂无报表
           </p>
-          <p className="text-xs text-slate-400 mt-1">点击"生成报表"自动汇总本月运行数据</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">点击"生成报表"自动汇总本月运行数据</p>
         </div>
       )}
 
       {/* 化验记录 */}
       <div>
-        <h2 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+        <h2 className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-3 flex items-center gap-2">
           <FlaskConical className="h-3.5 w-3.5 text-purple-500" />
           化验记录（软测量校准数据）
         </h2>
         {labSamples.length > 0 ? (
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-xs text-slate-500">
+              <thead className="bg-slate-50 dark:bg-slate-900/40 text-xs text-slate-500 dark:text-slate-400">
                 <tr>
                   <th className="px-4 py-2.5 text-left">采样时间</th>
                   <th className="px-4 py-2.5 text-right">
@@ -216,13 +216,13 @@ export function ReportViewer({
                   <th className="px-4 py-2.5 text-left">备注</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {labSamples.map((s) => {
                   const codOk = s.codOut == null || s.codOut <= GB_LIMITS.cod;
                   const nh3nOk = s.nh3nOut == null || s.nh3nOut <= GB_LIMITS.nh3n;
                   return (
-                    <tr key={s.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-2.5 text-slate-500 text-xs">
+                    <tr key={s.id} className="hover:bg-slate-50 dark:bg-slate-900/40">
+                      <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">
                         {new Date(s.sampledAt).toLocaleDateString("zh-CN")}
                       </td>
                       <td className={`px-4 py-2.5 text-right tabular-nums font-medium ${codOk ? "" : "text-red-600"}`}>
@@ -233,7 +233,7 @@ export function ReportViewer({
                       </td>
                       <td className="px-4 py-2.5 text-right tabular-nums">{s.tpOut ?? "—"}</td>
                       <td className="px-4 py-2.5 text-right tabular-nums">{s.ssOut ?? "—"}</td>
-                      <td className="px-4 py-2.5 text-xs text-slate-400">{s.notes ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-xs text-slate-400 dark:text-slate-500">{s.notes ?? "—"}</td>
                     </tr>
                   );
                 })}
@@ -241,7 +241,7 @@ export function ReportViewer({
             </table>
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400">
+          <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 py-6 text-center text-xs text-slate-400 dark:text-slate-500">
             暂无化验记录 · 在化验记录页录入数据用于软测量校准
           </div>
         )}

@@ -50,8 +50,8 @@ const actions: DemoAction[] = [
     icon: RefreshCw,
     label: "重置演示数据",
     desc: "关闭所有未处理告警，将所有传感器恢复至正常值，站点状态重置为【在线】。演示结束或重新开始前使用。",
-    color: "bg-slate-50 border-slate-200 hover:bg-slate-100",
-    badgeColor: "border-slate-200 text-slate-500",
+    color: "bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:bg-slate-800",
+    badgeColor: "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400",
     badge: "重置",
   },
 ];
@@ -90,7 +90,7 @@ export default function DemoPage() {
               欢迎体验污水托管运营平台 · 无需真实硬件即可完整演示所有功能
             </p>
           </div>
-          <Badge className="bg-white/20 text-white border-white/30 text-xs">
+          <Badge className="bg-white dark:bg-slate-900/20 text-white border-white/30 text-xs">
             演示模式
           </Badge>
         </div>
@@ -99,7 +99,7 @@ export default function DemoPage() {
             <Link
               key={l.href}
               href={l.href}
-              className="rounded-xl bg-white/10 hover:bg-white/20 transition-colors p-3 flex flex-col gap-1"
+              className="rounded-xl bg-white dark:bg-slate-900/10 hover:bg-white dark:bg-slate-900/20 transition-colors p-3 flex flex-col gap-1"
             >
               <span className="text-sm font-medium flex items-center gap-1">
                 {l.label} <ArrowRight className="h-3 w-3" />
@@ -114,12 +114,12 @@ export default function DemoPage() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-slate-500" />
+            <BookOpen className="h-4 w-4 text-slate-500 dark:text-slate-400" />
             推荐演示路径（约 5 分钟）
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ol className="space-y-2 text-sm text-slate-600">
+          <ol className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
             {[
               "点击下方【推送正常数据】，然后打开【总览】页面，观察传感器数值实时更新",
               "点击【触发暴雨冲击】，切换到【告警中心】查看自动生成的告警与 AI 诊断建议",
@@ -142,7 +142,7 @@ export default function DemoPage() {
 
       {/* 操作按钮 */}
       <div>
-        <h2 className="text-sm font-medium text-slate-700 mb-3">场景触发</h2>
+        <h2 className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-3">场景触发</h2>
         <div className="space-y-3">
           {actions.map(action => {
             const Icon = action.icon;
@@ -151,17 +151,17 @@ export default function DemoPage() {
               <div key={action.id} className={`rounded-xl border p-4 transition-colors ${action.color}`}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div className="mt-0.5 rounded-lg bg-white p-1.5 shadow-sm flex-shrink-0">
-                      <Icon className="h-4 w-4 text-slate-600" />
+                    <div className="mt-0.5 rounded-lg bg-white dark:bg-slate-900 p-1.5 shadow-sm flex-shrink-0">
+                      <Icon className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <p className="text-sm font-medium text-slate-800">{action.label}</p>
+                        <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{action.label}</p>
                         <Badge variant="outline" className={`text-[10px] ${action.badgeColor}`}>
                           {action.badge}
                         </Badge>
                       </div>
-                      <p className="text-xs text-slate-500 leading-relaxed">{action.desc}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{action.desc}</p>
                       {result && (
                         <p className={`text-xs mt-1.5 flex items-center gap-1 ${result.ok ? "text-green-600" : "text-red-500"}`}>
                           <CheckCircle2 className="h-3 w-3" />
@@ -173,7 +173,7 @@ export default function DemoPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-shrink-0 bg-white h-8 text-xs"
+                    className="flex-shrink-0 bg-white dark:bg-slate-900 h-8 text-xs"
                     disabled={loading === action.id}
                     onClick={() => run(action.id)}
                   >
@@ -188,7 +188,7 @@ export default function DemoPage() {
         </div>
       </div>
 
-      <p className="text-xs text-center text-slate-400">
+      <p className="text-xs text-center text-slate-400 dark:text-slate-500">
         数据模拟器每 10 秒自动推送传感器数据 · 演示数据不会上传至任何外部系统
       </p>
     </div>

@@ -1,29 +1,25 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { LabSchema, formatZodError } from "@/lib/schemas";
 
 export async function POST(req: Request) {
-  let body: { stationId: string; sampledAt: string; codOut?: number; nh3nOut?: number; tpOut?: number; ssOut?: number; codIn?: number; notes?: string };
+  let parsed: unknown;
   try {
-    body = await req.json();
+    parsed = await req.json();
   } catch {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
-
-  const { stationId, sampledAt, codOut, nh3nOut, tpOut, ssOut, codIn, notes } = body;
-  if (!stationId || !sampledAt) {
-    return NextResponse.json({ error: "stationId and sampledAt are required" }, { status: 400 });
+  const result = LabSchema.safeParse(parsed);
+  if (!result.success) {
+    return NextResponse.json({ error: formatZodError(result.error) }, { status: 400 });
   }
-
-  const sampledAtDate = new Date(sampledAt);
-  if (isNaN(sampledAtDate.getTime())) {
-    return NextResponse.json({ error: "invalid sampledAt date" }, { status: 400 });
-  }
+  const { stationId, sampledAt, codOut, nh3nOut, tpOut, ssOut, codIn, notes } = result.data;
 
   const sample = await prisma.labSample.create({
     data: {
       stationId,
-      sampledAt: sampledAtDate,
+      sampledAt: new Date(sampledAt),
       codOut: codOut ?? null,
       nh3nOut: nh3nOut ?? null,
       tpOut: tpOut ?? null,

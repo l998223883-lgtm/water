@@ -8,9 +8,9 @@ const Section = ({ id, icon: Icon, title, children }: {
   id: string; icon: React.ElementType; title: string; children: React.ReactNode;
 }) => (
   <section id={id} className="scroll-mt-6">
-    <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-200">
+    <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">
       <Icon className="h-5 w-5 text-blue-500" />
-      <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{title}</h2>
     </div>
     {children}
   </section>
@@ -19,13 +19,13 @@ const Section = ({ id, icon: Icon, title, children }: {
 const Table = ({ headers, rows }: { headers: string[]; rows: (string | React.ReactNode)[][] }) => (
   <div className="rounded-xl border overflow-hidden">
     <table className="w-full text-sm">
-      <thead className="bg-slate-50 text-xs text-slate-500">
+      <thead className="bg-slate-50 dark:bg-slate-900/40 text-xs text-slate-500 dark:text-slate-400">
         <tr>{headers.map(h => <th key={h} className="px-4 py-2.5 text-left font-medium">{h}</th>)}</tr>
       </thead>
-      <tbody className="divide-y divide-slate-100">
+      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
         {rows.map((row, i) => (
-          <tr key={i} className="hover:bg-slate-50">
-            {row.map((cell, j) => <td key={j} className="px-4 py-2.5 text-slate-700">{cell}</td>)}
+          <tr key={i} className="hover:bg-slate-50 dark:bg-slate-900/40">
+            {row.map((cell, j) => <td key={j} className="px-4 py-2.5 text-slate-700 dark:text-slate-200">{cell}</td>)}
           </tr>
         ))}
       </tbody>
@@ -38,9 +38,9 @@ const Step = ({ n, title, children }: { n: number; title: string; children: Reac
     <div className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-bold">
       {n}
     </div>
-    <div className="pt-1 pb-6 border-l-2 border-slate-200 pl-4 -ml-4 flex-1">
-      <h3 className="font-semibold text-slate-800 mb-2">{title}</h3>
-      <div className="text-sm text-slate-600 space-y-1">{children}</div>
+    <div className="pt-1 pb-6 border-l-2 border-slate-200 dark:border-slate-700 pl-4 -ml-4 flex-1">
+      <h3 className="font-semibold text-slate-800 dark:text-slate-100 mb-2">{title}</h3>
+      <div className="text-sm text-slate-600 dark:text-slate-300 space-y-1">{children}</div>
     </div>
   </div>
 );
@@ -50,8 +50,8 @@ export default function DocsPage() {
     <div className="p-6 max-w-4xl space-y-10">
       {/* 标题 */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">硬件部署指南</h1>
-        <p className="text-sm text-slate-500 mt-1">乡镇污水站标准化接入方案 · 适用于 50–5000 吨/天规模</p>
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">硬件部署指南</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">乡镇污水站标准化接入方案 · 适用于 50–5000 吨/天规模</p>
       </div>
 
       {/* 目录 */}
@@ -77,7 +77,7 @@ export default function DocsPage() {
       <Section id="bom" icon={HardDrive} title="一、标准硬件清单（500 吨/天基准站）">
         <div className="space-y-6">
           <div>
-            <p className="text-sm font-medium text-slate-600 mb-2">▍核心传感器（必装）</p>
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-2">▍核心传感器（必装）</p>
             <Table
               headers={["设备", "推荐型号", "数量", "安装位置", "参考价（元）"]}
               rows={[
@@ -87,11 +87,11 @@ export default function DocsPage() {
                 ["电磁流量计", "科隆 OPTIFLUX / 艾默生 8700M", "2 台", "进水管 + 出水管", "3,000–6,000/台"],
               ]}
             />
-            <p className="text-xs text-slate-400 mt-2">※ 核心传感器不可被视觉替代，为工艺控制与出水达标的法定依据。</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">※ 核心传感器不可被视觉替代，为工艺控制与出水达标的法定依据。</p>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-slate-600 mb-2">▍边缘计算与通信</p>
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-2">▍边缘计算与通信</p>
             <Table
               headers={["设备", "推荐型号", "数量", "说明", "参考价（元）"]}
               rows={[
@@ -104,7 +104,7 @@ export default function DocsPage() {
           </div>
 
           <div>
-            <p className="text-sm font-medium text-slate-600 mb-2">▍执行器（控制下发所需）</p>
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-2">▍执行器（控制下发所需）</p>
             <Table
               headers={["设备", "推荐型号", "数量", "说明", "参考价（元）"]}
               rows={[
@@ -116,7 +116,7 @@ export default function DocsPage() {
           </div>
 
           <div>
-            <p className="text-sm font-medium text-slate-600 mb-2">▍综合成本估算</p>
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-2">▍综合成本估算</p>
             <Table
               headers={["方案", "硬件成本", "安装调试", "合计", "备注"]}
               rows={[
@@ -150,7 +150,7 @@ export default function DocsPage() {
       {/* 二、AI 视觉替代方案 */}
       <Section id="vision" icon={Zap} title="二、AI 视觉替代方案（节省 ¥8,000–20,000/站）">
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">一台工业防水相机（¥800–2,000）部署在现场，运行 AI 视觉推理，可替代以下传感器：</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">一台工业防水相机（¥800–2,000）部署在现场，运行 AI 视觉推理，可替代以下传感器：</p>
           <Table
             headers={["可替代传感器", "视觉检测方式", "精度", "节省金额"]}
             rows={[
@@ -187,13 +187,13 @@ export default function DocsPage() {
             <p>pH / DO / ORP 探头安装在专用流通池或直插式管道安装支架。</p>
             <p>电磁流量计需断管安装，注意上下游直管段要求（上游 ≥10D，下游 ≥5D）。</p>
             <p>所有传感器走穿线管保护，避免阳光直射和设备震动。</p>
-            <p className="text-slate-400">※ 视觉相机：安装在曝气池斜上方 1.5–2 m 处，视角覆盖水面，需防水外壳 IP67。</p>
+            <p className="text-slate-400 dark:text-slate-500">※ 视觉相机：安装在曝气池斜上方 1.5–2 m 处，视角覆盖水面，需防水外壳 IP67。</p>
           </Step>
           <Step n={3} title="边缘网关配置（0.5 天）">
             <p>将所有传感器通过 RS485 线缆接入网关，每条总线不超过 32 个节点。</p>
             <p>在网关上配置各传感器的 Modbus 地址和采集频率（默认 10 秒/次）。</p>
-            <p>设置 <code className="bg-slate-100 px-1 rounded">gatewayId</code>（格式：GW-[站点编号]-[年份]，如 <code className="bg-slate-100 px-1 rounded">GW-DEMO-001</code>）。</p>
-            <p>测试本地 MQTT Broker 正常推送数据至 <code className="bg-slate-100 px-1 rounded">/api/ingest/telemetry</code>。</p>
+            <p>设置 <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">gatewayId</code>（格式：GW-[站点编号]-[年份]，如 <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">GW-DEMO-001</code>）。</p>
+            <p>测试本地 MQTT Broker 正常推送数据至 <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">/api/ingest/telemetry</code>。</p>
           </Step>
           <Step n={4} title="变频器对接（0.5 天）">
             <p>将曝气风机变频器接入 RS485 网络，配置 Modbus 站号（默认 1）。</p>
@@ -216,28 +216,28 @@ export default function DocsPage() {
             headers={["站点规模", "处理工艺", "传感器配置", "网关数量", "预估硬件成本"]}
             rows={[
               [
-                <span>微型站<br/><span className="text-slate-400 text-xs">50–200 吨/天</span></span>,
+                <span>微型站<br/><span className="text-slate-400 dark:text-slate-500 text-xs">50–200 吨/天</span></span>,
                 "A/O 或一体化设备",
                 "pH + DO + 进水流量计（3 项）",
                 "1 台（可用树莓派4B简化）",
                 "¥8,000–13,000",
               ],
               [
-                <span className="font-medium text-blue-600">标准站 ✦ 推荐<br/><span className="text-slate-400 text-xs font-normal">200–1000 吨/天</span></span>,
+                <span className="font-medium text-blue-600">标准站 ✦ 推荐<br/><span className="text-slate-400 dark:text-slate-500 text-xs font-normal">200–1000 吨/天</span></span>,
                 "MBBR / A²/O",
                 "pH + DO + ORP + 流量计×2（+ 视觉可选）",
                 "1 台工业网关",
                 "¥13,000–23,000",
               ],
               [
-                <span>中型站<br/><span className="text-slate-400 text-xs">1000–3000 吨/天</span></span>,
+                <span>中型站<br/><span className="text-slate-400 dark:text-slate-500 text-xs">1000–3000 吨/天</span></span>,
                 "A²/O + MBR",
                 "全套传感器 + 在线 COD 仪 + 总磷仪",
                 "1–2 台网关（分区采集）",
                 "¥35,000–80,000",
               ],
               [
-                <span>大型站<br/><span className="text-slate-400 text-xs">3000 吨/天以上</span></span>,
+                <span>大型站<br/><span className="text-slate-400 dark:text-slate-500 text-xs">3000 吨/天以上</span></span>,
                 "多段 A²/O + 深度处理",
                 "全套 + SCADA 系统对接",
                 "2 台以上，建议专线上传",
@@ -271,10 +271,10 @@ export default function DocsPage() {
             </Card>
           </div>
 
-          <div className="rounded-lg bg-slate-50 border border-slate-200 px-4 py-3">
-            <p className="text-xs text-slate-500">
-              <span className="font-medium text-slate-700">平台扩展性：</span>
-              系统支持无限站点，只需为每个站点分配唯一 <code className="bg-slate-100 px-1 rounded">gatewayId</code>。
+          <div className="rounded-lg bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 px-4 py-3">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="font-medium text-slate-700 dark:text-slate-200">平台扩展性：</span>
+              系统支持无限站点，只需为每个站点分配唯一 <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">gatewayId</code>。
               多站点管理、用户权限、跨站报表等功能将在 P1 阶段上线。如需定制接入方案，请联系技术支持。
             </p>
           </div>

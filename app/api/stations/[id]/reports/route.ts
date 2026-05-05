@@ -41,21 +41,26 @@ export async function POST(
   const start = new Date(year, mon - 1, 1);
   const end = new Date(year, mon, 0, 23, 59, 59);
 
-  // 聚合该月数据
+  // 聚合该月数据：单次 JOIN+GROUP BY 替代 N+1
   const sensors = await prisma.sensor.findMany({
     where: { stationId: params.id, isActive: true },
+    select: { id: true, type: true },
   });
 
   const avgValues: Record<string, number> = {};
-  for (const sensor of sensors) {
-    const result = await prisma.$queryRaw<[{ avg: number }]>`
-      SELECT ROUND(AVG(value)::numeric, 2) AS avg
+  if (sensors.length > 0) {
+    const rows = await prisma.$queryRaw<{ sensor_id: string; avg: number }[]>`
+      SELECT "sensorId" AS sensor_id, ROUND(AVG(value)::numeric, 2) AS avg
       FROM sensor_readings
-      WHERE "sensorId" = ${sensor.id}
+      WHERE "sensorId" = ANY(${sensors.map((s) => s.id)})
         AND timestamp >= ${start}
         AND timestamp <= ${end}
+      GROUP BY "sensorId"
     `;
-    avgValues[sensor.type] = Number(result[0]?.avg ?? 0);
+    const byId = new Map(rows.map((r) => [r.sensor_id, Number(r.avg)]));
+    for (const s of sensors) {
+      avgValues[s.type] = byId.get(s.id) ?? 0;
+    }
   }
 
   const alertCount = await prisma.alert.count({
@@ -71,8 +76,9 @@ export async function POST(
   const labSamples = await prisma.labSample.findMany({
     where: { stationId: params.id, sampledAt: { gte: start, lte: end } },
   });
-  const avgCodOut = labSamples.length
-    ? labSamples.reduce((s, l) => s + (l.codOut ?? 0), 0) / labSamples.length
+  const codOutSamples = labSamples.filter((l) => l.codOut !== null);
+  const avgCodOut = codOutSamples.length
+    ? codOutSamples.reduce((s, l) => s + l.codOut!, 0) / codOutSamples.length
     : null;
   const codCompliance = avgCodOut !== null ? (avgCodOut <= 50 ? 100 : 0) : 95; // PLACEHOLDER
 

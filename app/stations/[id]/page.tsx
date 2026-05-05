@@ -77,18 +77,18 @@ export default async function StationPage({
         <div>
           <Link
             href="/dashboard"
-            className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 mb-2"
+            className="flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300 mb-2"
           >
             <ArrowLeft className="h-3 w-3" />
             返回总览
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold text-slate-800">
+            <h1 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
               {station.name}
             </h1>
             <Badge
               variant="outline"
-              className={isOnline ? "border-green-200 text-green-700 bg-green-50" : "border-slate-200 text-slate-500"}
+              className={isOnline ? "border-green-200 text-green-700 bg-green-50" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"}
             >
               {isOnline ? "在线" : "离线"}
             </Badge>
@@ -98,12 +98,12 @@ export default async function StationPage({
               </Badge>
             )}
           </div>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             {station.location} · {station.processType} · 设计 {station.capacity} 吨/天
           </p>
         </div>
 
-        <div className="text-right text-xs text-slate-400">
+        <div className="text-right text-xs text-slate-400 dark:text-slate-500">
           <div className="flex items-center gap-1 justify-end">
             {isOnline
               ? <Wifi className="h-3 w-3 text-green-500" />
@@ -135,9 +135,9 @@ export default async function StationPage({
       <div className="grid grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-700">
+            <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-200">
               软测量预测
-              <span className="ml-2 text-[10px] font-normal text-slate-400">
+              <span className="ml-2 text-[10px] font-normal text-slate-400 dark:text-slate-500">
                 本地推理 · {soft.source === "fallback" ? "经验公式 [PLACEHOLDER: 接入LightGBM后精度更高]" : "LightGBM ONNX"}
               </span>
             </CardTitle>
@@ -146,19 +146,19 @@ export default async function StationPage({
             <div className="flex gap-6">
               <div>
                 <p className="text-2xl font-bold tabular-nums">{soft.codOut}</p>
-                <p className="text-xs text-slate-500">出水COD mg/L</p>
-                <p className="text-[10px] text-slate-400">目标 &lt;50 (一级A)</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">出水COD mg/L</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">目标 &lt;50 (一级A)</p>
               </div>
               <div>
                 <p className="text-2xl font-bold tabular-nums">{soft.nh3nOut}</p>
-                <p className="text-xs text-slate-500">出水氨氮 mg/L</p>
-                <p className="text-[10px] text-slate-400">目标 &lt;5 (一级A)</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">出水氨氮 mg/L</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">目标 &lt;5 (一级A)</p>
               </div>
               <div>
-                <p className="text-lg font-semibold text-slate-400 tabular-nums">
+                <p className="text-lg font-semibold text-slate-400 dark:text-slate-500 tabular-nums">
                   {(soft.confidence * 100).toFixed(0)}%
                 </p>
-                <p className="text-xs text-slate-500">置信度</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">置信度</p>
               </div>
             </div>
           </CardContent>
@@ -166,9 +166,9 @@ export default async function StationPage({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-700">
+            <CardTitle className="text-sm font-medium text-slate-700 dark:text-slate-200">
               控制建议
-              <span className="ml-2 text-[10px] font-normal text-slate-400">
+              <span className="ml-2 text-[10px] font-normal text-slate-400 dark:text-slate-500">
                 本地模糊控制 · 只读建议模式
               </span>
             </CardTitle>
@@ -179,17 +179,17 @@ export default async function StationPage({
                 <p className={`text-2xl font-bold tabular-nums ${control.safetyTriggered ? "text-orange-600" : ""}`}>
                   {control.blowerHz} Hz
                 </p>
-                <p className="text-xs text-slate-500">建议鼓风机频率</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">建议鼓风机频率</p>
                 {control.safetyTriggered && (
                   <p className="text-[10px] text-orange-500">⚠ 保底防线已触发</p>
                 )}
               </div>
               <div>
                 <p className="text-2xl font-bold tabular-nums">{control.dosingRatePct}%</p>
-                <p className="text-xs text-slate-500">建议加药泵开度</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">建议加药泵开度</p>
               </div>
             </div>
-            <p className="text-xs text-slate-400 mt-2">{control.reason}</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">{control.reason}</p>
           </CardContent>
         </Card>
       </div>
@@ -237,7 +237,7 @@ export default async function StationPage({
         <TabsContent value="control" className="mt-4">
           <div className="rounded-xl border overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-xs text-slate-500">
+              <thead className="bg-slate-50 dark:bg-slate-900/40 text-xs text-slate-500 dark:text-slate-400">
                 <tr>
                   <th className="px-4 py-2.5 text-left">时间</th>
                   <th className="px-4 py-2.5 text-left">设备</th>
@@ -248,16 +248,16 @@ export default async function StationPage({
                   <th className="px-4 py-2.5 text-left">回执</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {station.controlLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-2.5 text-slate-500 text-xs">
+                  <tr key={log.id} className="hover:bg-slate-50 dark:bg-slate-900/40">
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 text-xs">
                       {new Date(log.issuedAt).toLocaleString("zh-CN")}
                     </td>
                     <td className="px-4 py-2.5 font-medium">
                       {log.device === "BLOWER" ? "鼓风机" : "加药泵"}
                     </td>
-                    <td className="px-4 py-2.5 text-slate-500">{log.parameter}</td>
+                    <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">{log.parameter}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums">{log.oldValue}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums font-medium">
                       {log.newValue}
@@ -275,7 +275,7 @@ export default async function StationPage({
                             ? "border-orange-200 text-orange-600"
                             : log.source === "MANUAL"
                             ? "border-blue-200 text-blue-600"
-                            : "border-slate-200 text-slate-500"
+                            : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
                         }`}
                       >
                         {log.source === "SAFETY" ? "保底防线" : log.source === "MANUAL" ? "人工" : "算法"}
@@ -285,7 +285,7 @@ export default async function StationPage({
                       {log.confirmedAt ? (
                         <span className="text-green-600">✓ 已确认</span>
                       ) : (
-                        <span className="text-slate-400">等待中</span>
+                        <span className="text-slate-400 dark:text-slate-500">等待中</span>
                       )}
                     </td>
                   </tr>

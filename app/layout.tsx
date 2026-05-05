@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/Sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AlertToaster } from "@/components/layout/AlertToaster";
+import { AppShell } from "@/components/layout/AppShell";
 
 const geistSans = localFont({ src: "./fonts/GeistVF.woff", variable: "--font-sans", weight: "100 900" });
 const geistMono = localFont({ src: "./fonts/GeistMonoVF.woff", variable: "--font-mono", weight: "100 900" });
@@ -18,13 +19,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="antialiased bg-slate-50 text-slate-900">
+    <html lang="zh-CN" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('ww-theme');if(t==='dark')document.documentElement.classList.add('dark');}catch(_){}` }} />
+      </head>
+      <body className="antialiased bg-background text-foreground">
         <TooltipProvider>
-          <div className="flex h-screen overflow-hidden bg-[#EEF0F5]">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto pt-12 md:pt-0">{children}</main>
-          </div>
+          <AppShell>{children}</AppShell>
+          <AlertToaster />
         </TooltipProvider>
       </body>
     </html>

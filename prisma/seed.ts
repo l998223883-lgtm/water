@@ -16,7 +16,11 @@ import { generateMockReading } from "../lib/placeholders";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPrismaArg = any;
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+if (!process.env.DATABASE_URL) {
+  console.error("❌ DATABASE_URL 环境变量未设置。请在 .env 中配置后重试。");
+  process.exit(1);
+}
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {

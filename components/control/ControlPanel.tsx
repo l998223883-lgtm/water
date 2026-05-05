@@ -84,11 +84,11 @@ export function ControlPanel({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-sm font-medium">{label}</CardTitle>
-              <p className="text-xs text-slate-400 mt-0.5">{parameter}</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{parameter}</p>
             </div>
             <div className="flex items-center gap-1.5">
               <Shield className="h-3.5 w-3.5 text-blue-500" />
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
                 安全范围 {safetyMin}–{safetyMax} {unit}
               </span>
             </div>
@@ -99,16 +99,16 @@ export function ControlPanel({
           {/* 当前值 vs 建议值 */}
           <div className="flex gap-4 text-sm">
             <div>
-              <p className="text-xs text-slate-400">当前运行</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500">当前运行</p>
               <p className="text-xl font-bold tabular-nums">
-                {currentValue} <span className="text-xs font-normal text-slate-400">{unit}</span>
+                {currentValue} <span className="text-xs font-normal text-slate-400 dark:text-slate-500">{unit}</span>
               </p>
             </div>
-            <div className="flex items-center text-slate-300">→</div>
+            <div className="flex items-center text-slate-300 dark:text-slate-600">→</div>
             <div>
-              <p className="text-xs text-slate-400">算法建议</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500">算法建议</p>
               <p className="text-xl font-bold tabular-nums text-blue-600">
-                {recommended} <span className="text-xs font-normal text-slate-400">{unit}</span>
+                {recommended} <span className="text-xs font-normal text-slate-400 dark:text-slate-500">{unit}</span>
               </p>
             </div>
           </div>
@@ -117,7 +117,7 @@ export function ControlPanel({
           <div className="space-y-1">
             <div className="relative h-6 flex items-center">
               {/* 背景条 */}
-              <div className="absolute inset-x-0 h-2 rounded-full bg-slate-100" />
+              <div className="absolute inset-x-0 h-2 rounded-full bg-slate-100 dark:bg-slate-800" />
               {/* 安全范围区间 */}
               <div
                 className="absolute h-2 rounded-full bg-green-100"
@@ -154,7 +154,7 @@ export function ControlPanel({
                 }}
               />
             </div>
-            <div className="flex justify-between text-[10px] text-slate-400">
+            <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500">
               <span>{min} {unit}</span>
               <span>{max} {unit}</span>
             </div>
@@ -163,7 +163,7 @@ export function ControlPanel({
           {/* 数字输入 */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 flex-1">
-              <span className="text-sm text-slate-500">目标值</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400">目标值</span>
               <input
                 type="number"
                 min={min}
@@ -173,11 +173,11 @@ export function ControlPanel({
                   setInputValue(Number(e.target.value));
                   setResult(null);
                 }}
-                className="w-20 rounded-md border border-slate-200 px-2 py-1 text-sm font-mono text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-20 rounded-md border border-slate-200 dark:border-slate-700 px-2 py-1 text-sm font-mono text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <span className="text-sm text-slate-500">{unit}</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400">{unit}</span>
               {deltaPct > 0 && (
-                <span className={`text-xs ${isLargeChange ? "text-orange-500" : "text-slate-400"}`}>
+                <span className={`text-xs ${isLargeChange ? "text-orange-500" : "text-slate-400 dark:text-slate-500"}`}>
                   {inputValue > currentValue ? "+" : ""}{(inputValue - currentValue).toFixed(1)} ({deltaPct.toFixed(0)}%)
                 </span>
               )}
@@ -241,12 +241,12 @@ export function ControlPanel({
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2 text-sm">
-            <p className="text-slate-600">
+            <p className="text-slate-600 dark:text-slate-300">
               即将向 <span className="font-semibold">{label}</span> 下发指令：
             </p>
-            <div className="rounded-lg bg-slate-50 p-3 font-mono text-center">
-              <span className="text-slate-500">{currentValue}</span>
-              <span className="mx-3 text-slate-400">→</span>
+            <div className="rounded-lg bg-slate-50 dark:bg-slate-900/40 p-3 font-mono text-center">
+              <span className="text-slate-500 dark:text-slate-400">{currentValue}</span>
+              <span className="mx-3 text-slate-400 dark:text-slate-500">→</span>
               <span className="text-blue-600 font-bold">{inputValue} {unit}</span>
             </div>
             {isBeyondSafety && (
@@ -255,7 +255,7 @@ export function ControlPanel({
                 保底防线将自动截断至安全范围
               </p>
             )}
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-400 dark:text-slate-500">
               指令日志会实时记录。MVP阶段暂不发送至边缘网关 MQTT，仅记录到数据库。
             </p>
           </div>
